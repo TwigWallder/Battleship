@@ -4,15 +4,9 @@
 #include <time.h>
 
 #define TAILLE 10
-/*
-  case vide : ' '
-  case pleine : 'o'
-  case visee : '.'
-  case touchee : '?'
-  case coulee : '!'
-*/
 
 /*Contient les toutes les informations utiles pour un joueur.*/
+/*coordsBateau[x][0] est la ligne [x][1] est la colonne*/
 typedef struct statusBateaux{
   /*Porte Avion*/
   char porteAvion[5];
@@ -36,7 +30,15 @@ typedef struct statusBateaux{
   int statusTorp;
 }statusBateaux;
 
-/*Affiche le terrain de l'ordinateur pendant la partie*/
+/*
+  case vide : ' '
+  case pleine : 'o'
+  case visee : '.'
+  case touchee : '?'
+  case coulee : '!'
+*/
+
+/*Affiche le terrain de l'ordinateur pendant la partie (ne révèle pas la position des cases non touchées)*/
 void affTerrainPartie(char terrain[TAILLE][TAILLE]){
   int i = 0, j = 0;
   printf("   | A | B | C | D | E | F | G | H | I | J |\n");
@@ -107,7 +109,7 @@ void affResultats(statusBateaux bateauxJ, statusBateaux bateauxO, char platJ[TAI
   }
   printf("Votre plateau : \n\n");
   affTerrainJoueur(platJ);
-  printf("Plateau de l'ordinateur :");
+  printf("Plateau de l'ordinateur :\n\n");
   affTerrainJoueur(platO);
   system("PAUSE");
 }
@@ -273,7 +275,7 @@ int caseValide(char plat[TAILLE][TAILLE], int bateau, char orientation, int lign
     case 'h':
       if(colonne + taillesBateaux[bateau] <= 10){
         for(t = colonne-1 ; t < taillesBateaux[bateau] + colonne; t++){
-          if(plat[ligne][t] == 'o'){
+          if(plat[ligne][t] != ' '){
             return 0;
           }
         }
@@ -283,7 +285,7 @@ int caseValide(char plat[TAILLE][TAILLE], int bateau, char orientation, int lign
     case 'v':
       if(ligne + taillesBateaux[bateau] <= 10){
         for(t = ligne-1 ; t < taillesBateaux[bateau] + ligne; t++){
-          if(plat[t][colonne] == 'o'){
+          if(plat[t][colonne] != ' '){
             return 0;
           }
         }
@@ -473,7 +475,7 @@ int touche(char plat[TAILLE][TAILLE], int ligne, int colonne, statusBateaux * co
   }
   if(coule){
     printf(" Coule!");
-    for(int i = 0; i < taillesBateaux[bateau];i++){
+    for(int i = 0 ; i < taillesBateaux[bateau] ; i++){
       switch (bateau) {
         case 0:
           coords->porteAvion[i] = '!';
@@ -562,38 +564,30 @@ int saisieTir(char plat[TAILLE][TAILLE], statusBateaux * coords, int estOrdi){
           if(plat[i][j]=='?'){
             /*Si il y a un point d'interrogation en dessous de la case actuelle*/
             if(i != 0){
-              if(plat[i+1][j] == '?' && plat[i-1][j]!= '?' && plat[i-1][j]!= '!' && plat[i-1][j]!= '.'){
-                ligne = i-1;
-                colonneInt = j;
-                printf("\nPOINT D'INTERROGATION EN DESSOUS DE LA CASE\nTIR EN ligne : %d colonneInt : %d\n",ligne,colonneInt);
-                trouve = 1;
-              }
-            }
-            /*Si il y a un point d'interrogation au dessus de la case actuelle*/
-            if(!trouve && i != 9){
-              if(plat[i-1][j] == '?' && plat[i+1][j]!= '?' && plat[i+1][j]!= '!' && plat[i+1][j]!= '.'){
-                ligne = i+1;
-                colonneInt = j;
-                printf("\nPOINT D'INTERROGATION AU DESSUS DE LA CASE\nTIR EN ligne : %d colonneInt : %d\n",ligne,colonneInt);
-                trouve = 1;
-              }
-            }
-            /*Si il y a un point d'interrogation a gauche de la case actuelle*/
-            if(!trouve && i != 0){
-              if(plat[i][j+1] == '?' && plat[i][j+1]!= '?' && plat[i][j+1]!= '!' && plat[i][j+1]!= '.'){
-                ligne = i;
-                colonneInt = j+1;
-                printf("\nPOINT D'INTERROGATION A GAUCHE DE LA CASE\nTIR EN ligne : %d colonneInt : %d\n",ligne,colonneInt);
-                trouve = 1;
+              if(plat[i+1][j] == '?'){
+                if(plat[i-1][j]== 'o' || plat[i-1][j] == ' '){
+                  ligne = i-1;
+                  colonneInt = j;
+                  trouve = 1;
+                }else{
+                  ligne = i+2;
+                  colonneInt = j;
+                  trouve = 1;
+                }
               }
             }
             /*Si il y a un point d'interrogation a droite de la case actuelle*/
             if(!trouve && i != 9){
-              if(plat[i][j-1] == '?' && plat[i][j-1]!= '?' && plat[i][j-1]!= '!' && plat[i][j-1]!= '.'){
-                ligne = i;
-                colonneInt = j-1;
-                printf("\nPOINT D'INTERROGATION A DROITE DE LA CASE\nTIR EN ligne : %d colonneInt : %d\n",ligne,colonneInt);
-                trouve = 1;
+              if(plat[i][j+1] == '?'){
+                if(plat[i][j-1]== 'o' || plat[i][j-1]== ' '){
+                  ligne = i;
+                  colonneInt = j-1;
+                  trouve = 1;
+                }else{
+                  ligne = i;
+                  colonneInt = j+2;
+                  trouve = 1;
+                }
               }
             }
             /*SI IL N'Y A PAS DE LIGNE/COLONNE DE '?'*/
@@ -627,6 +621,79 @@ int saisieTir(char plat[TAILLE][TAILLE], statusBateaux * coords, int estOrdi){
                 if(plat[i][j+1]!= '?' && plat[i][j+1]!= '!' && plat[i][j+1]!= '.'){
                   ligne = i;
                   colonneInt = j+1;
+                  trouve = 1;
+                }
+              }
+            }
+          }
+        }
+      }
+      /*Si il n'y a pas de '?' à tirer*/
+      int nbCasesVides = 0;
+      for(int i = 0 ; i < TAILLE ; i++){
+        for(int j = 0; j < TAILLE ; j++){
+          if(plat[i][j] == ' ' || plat[i][j] == 'o'){
+            nbCasesVides++;
+          }
+        }
+      }
+      if(nbCasesVides < 70 && !trouve){
+        for(int i = 0 ; i < TAILLE ; i++){
+          for(int j = 0; j < TAILLE ; j++){
+            if(plat[i][j] == ' ' || plat[i][j] == 'o'){
+              /* premiere ligne et colonne */
+              if(i < 1 && j < 1){
+                if((plat[i+1][j]==' ' || plat[i+1][j] == 'o') && (plat[i][j+1]==' ' || plat[i][j+1] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*premiere ligne*/
+              if(i < 1 && !trouve){
+                if((plat[i+1][j]==' ' || plat[i+1][j] == 'o') && (plat[i][j+1]==' ' || plat[i][j+1] == 'o') && (plat[i][j-1]==' ' || plat[i][j-1] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*premiere colonne*/
+              if( j < 1 && !trouve){
+                if((plat[i+1][j]==' ' || plat[i+1][j] == 'o') && (plat[i][j+1]==' ' || plat[i][j+1] == 'o') && (plat[i-1][j]==' ' || plat[i-1][j] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*Pas dans l'une des premieres ni dernieres lignes ou colonnes*/
+              if(i < 9 && j < 9 && !trouve){
+                if((plat[i+1][j]==' ' || plat[i+1][j] == 'o') && (plat[i][j+1]==' ' || plat[i][j+1] == 'o') && (plat[i-1][j]==' ' || plat[i-1][j] == 'o') && (plat[i-1][j]==' ' || plat[i-1][j] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*derniere ligne et colonne*/
+              if(i > 8 && j > 8 && !trouve){
+                if((plat[i-1][j]==' ' || plat[i-1][j] == 'o') && (plat[i][j-1]==' ' || plat[i][j-1] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*premiere ligne*/
+              if(i > 8 && !trouve){
+                if((plat[i-1][j]==' ' || plat[i-1][j] == 'o') && (plat[i][j+1]==' ' || plat[i][j+1] == 'o') && (plat[i][j-1]==' ' || plat[i][j-1] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
+                  trouve = 1;
+                }
+              }
+              /*derniere colonne*/
+              if( j > 8 && !trouve){
+                if((plat[i+1][j]==' ' || plat[i+1][j] == 'o') && (plat[i][j-1]==' ' || plat[i][j-1] == 'o') && (plat[i-1][j]==' ' || plat[i-1][j] == 'o')){
+                  ligne = i;
+                  colonneInt = j;
                   trouve = 1;
                 }
               }
