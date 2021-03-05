@@ -31,7 +31,7 @@ typedef struct statusBateaux{
 }statusBateaux;
 
 /*
-  case vide : ' ' 
+  case vide : ' '
   case pleine : 'o'
   case visee : '.'
   case touchee : '?'
